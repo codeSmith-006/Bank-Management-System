@@ -39,20 +39,39 @@ public class BkashService implements BankService {
     }
 
     @Override
+    public boolean addMoney(String phone, double amount, String pin) {
+        if (amount <= 0) return false;
+        User u = userRepo.findByPhone(phone);
+        if (u == null) return false;
+        if (!SecurityUtil.verifyPin(pin, u.getPinHash())) return false;
+
+        synchronized (this) {
+            u.deposit(amount);
+            userRepo.save(u);
+
+            Transaction t = new Transaction(Type.TOPUP, null, phone, amount, "Add money via agent/bank");
+            txRepo.save(t);
+            u.addTransaction(t.getId());
+            userRepo.save(u);
+            return true;
+        }
+    }
+
+    @Override
     public boolean sendMoney(String fromPhone, String toPhone, double amount, String pin) {
         if (amount <= 0) return false;
         User from = userRepo.findByPhone(fromPhone);
         User to = userRepo.findByPhone(toPhone);
         if (from == null || to == null) return false;
         if (!SecurityUtil.verifyPin(pin, from.getPinHash())) return false;
-        
+
         double total = amount + SEND_FEE;
         synchronized (this) {
             if (!from.withdraw(total)) return false;
             to.deposit(amount);
             userRepo.save(from);
             userRepo.save(to);
-            
+
             Transaction t = new Transaction(Type.SEND_MONEY, fromPhone, toPhone, amount, "Send money");
             txRepo.save(t);
             from.addTransaction(t.getId());
@@ -69,12 +88,12 @@ public class BkashService implements BankService {
         User u = userRepo.findByPhone(phone);
         if (u == null) return false;
         if (!SecurityUtil.verifyPin(pin, u.getPinHash())) return false;
-        
+
         double total = amount + CASHOUT_FEE;
         synchronized (this) {
             if (!u.withdraw(total)) return false;
             userRepo.save(u);
-            
+
             Transaction t = new Transaction(Type.CASH_OUT, phone, null, amount, "Cash out via agent");
             txRepo.save(t);
             u.addTransaction(t.getId());
@@ -89,11 +108,11 @@ public class BkashService implements BankService {
         User u = userRepo.findByPhone(fromPhone);
         if (u == null) return false;
         if (!SecurityUtil.verifyPin(pin, u.getPinHash())) return false;
-        
+
         synchronized (this) {
             if (!u.withdraw(amount)) return false;
             userRepo.save(u);
-            
+
             Transaction t = new Transaction(Type.PAYMENT, fromPhone, merchantId, amount, "Payment to merchant");
             txRepo.save(t);
             u.addTransaction(t.getId());
@@ -108,11 +127,11 @@ public class BkashService implements BankService {
         User u = userRepo.findByPhone(phone);
         if (u == null) return false;
         if (!SecurityUtil.verifyPin(pin, u.getPinHash())) return false;
-        
+
         synchronized (this) {
             if (!u.withdraw(amount)) return false;
             userRepo.save(u);
-            
+
             Transaction t = new Transaction(Type.RECHARGE, phone, topupNumber, amount, "Mobile recharge");
             txRepo.save(t);
             u.addTransaction(t.getId());
@@ -138,7 +157,7 @@ public class BkashService implements BankService {
         User u = userRepo.findByPhone(phone);
         if (u == null) return false;
         if (!SecurityUtil.verifyPin(oldPin, u.getPinHash())) return false;
-        
+
         u.setPinHash(SecurityUtil.hashPin(newPin));
         userRepo.save(u);
         return true;

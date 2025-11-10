@@ -6,6 +6,7 @@ import java.util.List;
 public interface BankService {
     boolean register(String phone, String name, String pin);
     boolean login(String phone, String pin);
+    boolean addMoney(String phone, double amount, String pin);  // ← NEW
     boolean sendMoney(String fromPhone, String toPhone, double amount, String pin);
     boolean cashOut(String phone, double amount, String pin);
     boolean payment(String fromPhone, String merchantId, double amount, String pin);

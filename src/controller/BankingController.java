@@ -53,10 +53,8 @@ public class BankingController {
         String name = InputUtil.readLine("Enter name: ");
         String pin = InputUtil.readLine("Set PIN (4 digits): ");
         boolean ok = service.register(phone, name, pin);
-        if (ok)
-            System.out.println("✅ Account created successfully!");
-        else
-            System.out.println("❌ Account with this phone already exists.");
+        if (ok) System.out.println("✅ Account created successfully!");
+        else System.out.println("❌ Account with this phone already exists.");
     }
 
     private void handleLogin() {
@@ -90,14 +88,15 @@ public class BankingController {
             showUserMenu();
             int sel = InputUtil.readInt("Select: ");
             switch (sel) {
-                case 1 -> handleSendMoney();
-                case 2 -> handleCashOut();
-                case 3 -> handlePayment();
-                case 4 -> handleRecharge();
-                case 5 -> handleBalance();
-                case 6 -> handleTransactionHistory();
-                case 7 -> handleChangePin();
-                case 8 -> {
+                case 1 -> handleAddMoney();
+                case 2 -> handleSendMoney();
+                case 3 -> handleCashOut();
+                case 4 -> handlePayment();
+                case 5 -> handleRecharge();
+                case 6 -> handleBalance();
+                case 7 -> handleTransactionHistory();
+                case 8 -> handleChangePin();
+                case 9 -> {
                     currentUserPhone = null;
                     System.out.println("✅ Logged out successfully.");
                     return;
@@ -111,14 +110,24 @@ public class BankingController {
         System.out.println("\n╔════════════════════════════════╗");
         System.out.println("║       JavaPay User Menu        ║");
         System.out.println("╚════════════════════════════════╝");
-        System.out.println("1. Send Money");
-        System.out.println("2. Cash Out");
-        System.out.println("3. Payment");
-        System.out.println("4. Mobile Recharge");
-        System.out.println("5. Check Balance");
-        System.out.println("6. Transaction History");
-        System.out.println("7. Change PIN");
-        System.out.println("8. Logout");
+        System.out.println("1. Add Money (Cash In)");
+        System.out.println("2. Send Money");
+        System.out.println("3. Cash Out");
+        System.out.println("4. Payment");
+        System.out.println("5. Mobile Recharge");
+        System.out.println("6. Check Balance");
+        System.out.println("7. Transaction History");
+        System.out.println("8. Change PIN");
+        System.out.println("9. Logout");
+    }
+
+    private void handleAddMoney() {
+        System.out.println("\n--- ADD MONEY (Cash In) ---");
+        System.out.println("💡 Add money via agent or bank deposit");
+        double amount = InputUtil.readDouble("Enter amount to add: ");
+        String pin = InputUtil.readLine("Enter PIN to confirm: ");
+        boolean ok = service.addMoney(currentUserPhone, amount, pin);
+        System.out.println(ok ? "✅ Add Money: SUCCESS - Balance updated!" : "❌ Add Money: FAILED (invalid PIN/amount)");
     }
 
     private void handleSendMoney() {
